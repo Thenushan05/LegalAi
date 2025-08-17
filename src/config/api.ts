@@ -1,6 +1,6 @@
 // API Configuration for LegalAI Backend
 export const API_CONFIG = {
-  BASE_URL: 'legaldoc-ai-production.up.railway.app/api',
+  BASE_URL: 'https://legaldoc-ai-production.up.railway.app/api',
   ENDPOINTS: {
     // Upload endpoints
     UPLOAD: '/upload',
