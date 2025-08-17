@@ -89,6 +89,43 @@ export class ApiClient {
     return response.json();
   }
 
+  // Normalize filename for storage (remove spaces and special chars)
+  private normalizeFilename(filename: string): string {
+    return filename.toLowerCase().replace(/[^a-z0-9.]/g, '');
+  }
+
+  // Helper method to store file info in session storage
+  private storeFileInfo(filename: string, fileHash: string) {
+    const normalized = this.normalizeFilename(filename);
+    const fileMap = JSON.parse(sessionStorage.getItem('fileMap') || '{}');
+    const fileList = JSON.parse(sessionStorage.getItem('fileList') || '[]');
+    
+    // Store with both original and normalized keys
+    fileMap[filename] = fileHash;
+    fileMap[normalized] = fileHash;
+    
+    // Add to file list if not already present
+    if (!fileList.some((f: {name: string}) => f.name === filename)) {
+      fileList.push({ name: filename, normalized });
+    }
+    
+    sessionStorage.setItem('fileMap', JSON.stringify(fileMap));
+    sessionStorage.setItem('fileList', JSON.stringify(fileList));
+    sessionStorage.setItem('lastUploadedFile', JSON.stringify({ filename, fileHash }));
+  }
+
+  // Helper method to get file hash by filename or get the last uploaded file
+  private getFileHash(filename?: string): string | null {
+    if (filename) {
+      const fileMap = JSON.parse(sessionStorage.getItem('fileMap') || '{}');
+      return fileMap[filename] || null;
+    }
+    
+    // If no filename provided, get the last uploaded file
+    const lastFile = sessionStorage.getItem('lastUploadedFile');
+    return lastFile ? JSON.parse(lastFile).fileHash : null;
+  }
+
   // Upload methods
   async uploadFile(file: File, uploadType: 'normal' | 'confidential' = 'normal'): Promise<UploadResponse> {
     const formData = new FormData();
@@ -101,7 +138,14 @@ export class ApiClient {
       body: formData,
     });
 
-    return this.handleResponse(response);
+    const result = await this.handleResponse<UploadResponse>(response);
+    
+    // Store the file info in session storage
+    if (result.file_id) {
+      this.storeFileInfo(file.name, result.file_id);
+    }
+
+    return result;
   }
 
   async getUploadStatus(fileHash: string): Promise<{ status: string }> {
@@ -131,7 +175,14 @@ export class ApiClient {
       body: formData,
     });
 
-    return this.handleResponse(response);
+    const result = await this.handleResponse<UploadResponse>(response);
+
+    // Store the file info in session storage for guest uploads as well
+    if (result.file_id) {
+      this.storeFileInfo(file.name, result.file_id);
+    }
+
+    return result;
   }
 
   async guestQA(question: string, fileHash: string, topK: number = 5): Promise<QAResponse> {
@@ -148,8 +199,96 @@ export class ApiClient {
     return this.handleResponse(response);
   }
 
+  // Helper method to convert wildcard pattern to regex
+  private wildcardToRegex(pattern: string): RegExp {
+    // Escape special regex chars, then replace * with .* and ? with .
+    const escaped = pattern
+      .replace(/[.+^${}()|[\]\\]/g, '\\$&') // escape special regex chars
+      .replace(/\*/g, '.*')
+      .replace(/\?/g, '.');
+    return new RegExp(`^${escaped}$`, 'i'); // case insensitive
+  }
+
+  // Get all available filenames for @ mentions
+  getAvailableFiles(): Array<{name: string, normalized: string}> {
+    return JSON.parse(sessionStorage.getItem('fileList') || '[]');
+  }
+
+  // Helper method to find a filename in the text with @ mention support
+  private findFilenameInText(text: string): string | null {
+    const fileMap = JSON.parse(sessionStorage.getItem('fileMap') || '{}');
+    const fileList = JSON.parse(sessionStorage.getItem('fileList') || '[]');
+    
+    // Check for @ mention
+    const mentionMatch = text.match(/@([\w.-]+)/);
+    if (mentionMatch) {
+      const searchTerm = mentionMatch[1].toLowerCase();
+      // Find file by normalized name
+      const file = fileList.find((f: {normalized: string}) => 
+        f.normalized.includes(searchTerm)
+      );
+      if (file) {
+        return file.name;
+      }
+    }
+    
+    // Check for exact matches in quotes
+    for (const file of fileList) {
+      if (text.includes(`"${file.name}"`) || text.includes(`'${file.name}'`)) {
+        return file.name;
+      }
+    }
+    
+    // Check for filename as a whole word
+    for (const file of fileList) {
+      // eslint-disable-next-line no-useless-escape
+      const wordBoundary = /[\s\n\r\t.,;:!?()\[\]{}"']/;
+      const escapedName = file.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(^|${wordBoundary.source})${escapedName}($|${wordBoundary.source})`, 'i');
+      
+      if (regex.test(text)) {
+        return file.name;
+      }
+    }
+    
+    // Use last uploaded file if no specific file mentioned
+    const lastFile = sessionStorage.getItem('lastUploadedFile');
+    return lastFile ? JSON.parse(lastFile).filename : null;
+  }
+
   // Q&A methods
-  async askQuestion(question: string, fileHash: string, topK: number = 5): Promise<QAResponse> {
+  async askQuestion(question: string, fileIdentifier?: string, topK: number = 5): Promise<QAResponse> {
+    let fileHash: string | null = null;
+    
+    // If fileIdentifier is provided, use it
+    if (fileIdentifier) {
+      // If it looks like a filename (contains a dot), resolve to a hash via map
+      if (fileIdentifier.includes('.')) {
+        fileHash = this.getFileHash(fileIdentifier);
+      } else {
+        // Otherwise, treat it as an already-resolved file hash
+        fileHash = fileIdentifier;
+      }
+    } 
+    // Otherwise, try to find a filename in the question
+    else {
+      const foundFilename = this.findFilenameInText(question);
+      if (foundFilename) {
+        fileHash = this.getFileHash(foundFilename);
+      } 
+      // If no filename found in text, use the last uploaded file
+      else {
+        const lastFile = sessionStorage.getItem('lastUploadedFile');
+        if (lastFile) {
+          fileHash = JSON.parse(lastFile).fileHash;
+        }
+      }
+    }
+    
+    if (!fileHash) {
+      throw new Error('No file specified and no files have been uploaded yet. Please upload a file first or specify a filename in your question.');
+    }
+
     const response = await this._fetchWithTimeout(`${this.baseUrl}${API_CONFIG.ENDPOINTS.QA}`, {
       method: 'POST',
       headers: this.getHeaders(),

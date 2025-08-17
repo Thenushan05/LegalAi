@@ -181,6 +181,11 @@ export default function Chat() {
   const [currentFileHash, setCurrentFileHash] = useState<string | null>(null);
   const [showEvidenceDialog, setShowEvidenceDialog] = useState(false);
   const [selectedEvidence, setSelectedEvidence] = useState<Evidence[]>([]);
+  const [showFileSelector, setShowFileSelector] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [availableFiles, setAvailableFiles] = useState<Array<{name: string, normalized: string}>>([]);
+  const [showAtMention, setShowAtMention] = useState(false);
+  const [atMentionPosition, setAtMentionPosition] = useState(0);
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuth();
 
@@ -192,6 +197,81 @@ export default function Chat() {
       console.error("Failed to save file hash to localStorage:", error);
     }
   }, []);
+
+  // Load available files from session storage
+  const loadAvailableFiles = useCallback(() => {
+    try {
+      const files = apiClient.getAvailableFiles();
+      console.log('Loaded files from session storage:', files);
+      setAvailableFiles(files);
+      
+      // Also log what's in session storage directly
+      const fileMap = sessionStorage.getItem('fileMap');
+      const fileList = sessionStorage.getItem('fileList');
+      console.log('Session storage fileMap:', fileMap);
+      console.log('Session storage fileList:', fileList);
+    } catch (error) {
+      console.error('Error loading available files:', error);
+      setAvailableFiles([]);
+    }
+  }, []);
+
+  // Handle @ mention detection
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursorPosition = e.target.selectionStart || 0;
+    
+    setInputValue(value);
+    
+    // Check for @ mention
+    const atIndex = value.lastIndexOf('@', cursorPosition - 1);
+    if (!isLoading && atIndex !== -1 && (atIndex === 0 || value[atIndex - 1] === ' ')) {
+      const searchTerm = value.substring(atIndex + 1, cursorPosition).toLowerCase();
+      console.log('@ mention detected, search term:', searchTerm);
+      console.log('Available files for filtering:', availableFiles);
+      // Refresh available files to ensure latest
+      loadAvailableFiles();
+      
+      const filteredFiles = availableFiles.filter(file => 
+        file.normalized.includes(searchTerm) || file.name.toLowerCase().includes(searchTerm)
+      );
+      
+      console.log('Filtered files:', filteredFiles);
+      
+      if (availableFiles.length > 0) { // Show dropdown if any files exist
+        setShowAtMention(true);
+        setAtMentionPosition(atIndex);
+      } else {
+        setShowAtMention(false);
+      }
+    } else {
+      setShowAtMention(false);
+    }
+  };
+
+  // Handle file selection from @ mention
+  const handleFileSelect = (fileName: string) => {
+    const beforeAt = inputValue.substring(0, atMentionPosition);
+    const afterCursor = inputValue.substring(inputValue.indexOf(' ', atMentionPosition) !== -1 ? inputValue.indexOf(' ', atMentionPosition) : inputValue.length);
+    const newValue = `${beforeAt}@${fileName}${afterCursor}`;
+    
+    setInputValue(newValue);
+    setShowAtMention(false);
+    setSelectedFile(fileName);
+  };
+
+  // Handle + button file selection
+  const handlePlusButtonFileSelect = (fileName: string) => {
+    console.log('Plus button file selected:', fileName);
+    setSelectedFile(fileName);
+    setShowFileSelector(false);
+    // Add file mention to input if not already present
+    if (!inputValue.includes(fileName)) {
+      setInputValue(prev => prev ? `${prev} @${fileName}` : `@${fileName}`);
+    }
+    // Also trigger a refresh of available files
+    setTimeout(() => loadAvailableFiles(), 100);
+  };
 
   const loadFileHashFromStorage = useCallback((): string | null => {
     try {
@@ -545,6 +625,11 @@ export default function Chat() {
     checkBackend();
   }, [toast]);
 
+  // Load available files on mount
+  useEffect(() => {
+    loadAvailableFiles();
+  }, [loadAvailableFiles]);
+
   const typePlaceholderText = async (text: string) => {
     setIsTypingPlaceholder(true);
     setPlaceholderText("");
@@ -653,6 +738,8 @@ export default function Chat() {
                 description: `${file.name} uploaded successfully (${typeLabel})`,
                 duration: 2000,
               });
+              // Refresh available files list after successful upload
+              loadAvailableFiles();
             } catch (error) {
               console.error("Upload error:", error);
               toast({
@@ -685,7 +772,7 @@ export default function Chat() {
         setUploadType(null);
       }
     },
-    [uploadType, toast, backendAvailable, isAuthenticated]
+    [uploadType, toast, backendAvailable, isAuthenticated, loadAvailableFiles]
   );
 
   // Listen for file uploads from sidebar
@@ -780,6 +867,23 @@ export default function Chat() {
     setStagedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const inputAreaRef = useRef<HTMLDivElement | null>(null);
+
+  // Close dropdowns when clicking outside the input area
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const container = inputAreaRef.current;
+      if (container && !container.contains(e.target as Node)) {
+        setShowFileSelector(false);
+        setShowAtMention(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleSendWithFiles = async (isSimplify: boolean = false) => {
     // For simplify: only need file hash, no text or files required
     // For normal send: need text input
@@ -811,8 +915,39 @@ export default function Chat() {
       attachedFiles: stagedFiles.map((file) => file.name),
     };
 
+    // Close any open dropdowns while sending
+    setShowFileSelector(false);
+    setShowAtMention(false);
     setMessages((prev) => [...prev, userMessage]);
-    const currentQuestion = inputValue.trim();
+    const currentQuestionRaw = inputValue.trim();
+    // Clean the question by removing any @mention file tokens (both original and normalized names)
+    const cleanQuestion = (text: string) => {
+      try {
+        const fileList: Array<{ name: string; normalized: string }> = JSON.parse(
+          sessionStorage.getItem('fileList') || '[]'
+        );
+        let cleaned = text;
+        const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        for (const f of fileList) {
+          const patterns = [f.name, f.normalized]
+            .filter(Boolean)
+            .map((n) => new RegExp(`(^|\\s)@${escapeRegex(n)}(\\b|\\s|$)`, 'ig'));
+          for (const re of patterns) {
+            cleaned = cleaned.replace(re, (m, p1, p2) => (p1 ? p1 : '') + (p2 ? p2 : ''));
+          }
+        }
+        // Also remove stray solitary '@' tokens followed by non-space word if it exactly matches any file token
+        // Build a set of tokens for quick check
+        const tokens = new Set<string>(fileList.flatMap(f => [f.name, f.normalized].filter(Boolean)) as string[]);
+        cleaned = cleaned.replace(/(^|\s)@([^\s]+)/g, (full, pre, word) => {
+          return tokens.has(word) ? (pre || '') : full;
+        });
+        return cleaned.trim();
+      } catch {
+        return text;
+      }
+    };
+    const currentQuestion = cleanQuestion(currentQuestionRaw);
     const currentFiles = [...stagedFiles];
     setInputValue("");
     setStagedFiles([]);
@@ -844,6 +979,14 @@ export default function Chat() {
           setCurrentFileHash(fileId);
           saveFileHashToStorage(fileId);
         }
+      } else if (selectedFile) {
+        // Use selected file from @ mention or + button
+        const fileMap = JSON.parse(sessionStorage.getItem('fileMap') || '{}');
+        fileId = fileMap[selectedFile];
+        if (fileId) {
+          setCurrentFileHash(fileId);
+          saveFileHashToStorage(fileId);
+        }
       } else if (currentFileHash && (currentQuestion || isSimplify)) {
         // Use previously saved file hash
         fileId = currentFileHash;
@@ -863,6 +1006,7 @@ export default function Chat() {
             confidence = simplifyResponse.confidence;
           } else {
             // Use appropriate Q&A endpoint based on authentication
+            // Pass the question without file identifier since we're using fileId directly
             const qaResponse: QAResponse = isAuthenticated
               ? await apiClient.askQuestion(currentQuestion, fileId)
               : await apiClient.guestQA(currentQuestion, fileId);
@@ -1730,10 +1874,34 @@ export default function Chat() {
                     </div>
                   )}
 
-                  <div className="relative">
+                  <div className="relative" ref={inputAreaRef}>
+                    {/* + Button for file selection */}
+                    <div className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (isLoading) return; // Prevent opening while sending
+                          // Refresh available files when opening the selector
+                          setShowFileSelector((prev) => {
+                            const next = !prev;
+                            if (next) {
+                              loadAvailableFiles();
+                            }
+                            return next;
+                          });
+                        }}
+                        className="h-8 w-8 p-0 rounded-full hover:bg-[#00C2FF]/10 transition-colors"
+                        disabled={isLoading}
+                        title={availableFiles.length === 0 ? 'No files uploaded yet' : `${availableFiles.length} files available`}
+                      >
+                        <Plus className="h-4 w-4 text-[#00C2FF]" />
+                      </Button>
+                    </div>
+
                     <Input
                       value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
+                      onChange={handleInputChange}
                       onKeyPress={(e) =>
                         e.key === "Enter" && handleSendMessage()
                       }
@@ -1742,9 +1910,76 @@ export default function Chat() {
                           ? placeholderText
                           : placeholderTexts[placeholderIndex]
                       }
-                      className="pr-48 h-14 text-base rounded-2xl border-2 border-border/50 transition-all duration-300 focus:ring-2 focus:ring-[#00C2FF] focus:border-[#00C2FF] pl-4"
+                      className="pr-48 h-14 text-base rounded-2xl border-2 border-border/50 transition-all duration-300 focus:ring-2 focus:ring-[#00C2FF] focus:border-[#00C2FF] pl-12"
                       disabled={isLoading}
                     />
+
+                    {/* @ Mention Dropdown */}
+                    {showAtMention && (
+                      <div className="absolute bottom-16 left-12 w-80 bg-white dark:bg-gray-800 border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto z-50">
+                        <div className="px-3 py-2 border-b border-border">
+                          <span className="text-sm font-medium text-muted-foreground">@ Mention Files</span>
+                        </div>
+                        {availableFiles.length === 0 ? (
+                          <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                            No files uploaded yet
+                          </div>
+                        ) : (
+                          availableFiles
+                            .filter(file => {
+                              const searchTerm = inputValue.substring(atMentionPosition + 1).toLowerCase();
+                              return searchTerm === '' || file.normalized.includes(searchTerm) || file.name.toLowerCase().includes(searchTerm);
+                            })
+                            .map((file, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                                onClick={() => handleFileSelect(file.name)}
+                              >
+                                <FileText className="h-4 w-4 text-[#00C2FF]" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium">{file.name}</span>
+                                  <span className="text-xs text-muted-foreground">{file.normalized}</span>
+                                </div>
+                              </div>
+                            ))
+                        )}
+                      </div>
+                    )}
+
+                    {/* + Button File Selector Dropdown */}
+                    {showFileSelector && (
+                      <div className="absolute bottom-16 left-0 bg-white dark:bg-gray-800 border border-border rounded-lg shadow-lg w-72 max-h-40 overflow-y-auto z-50">
+                        <div className="px-3 py-2 border-b border-border">
+                          <span className="text-sm font-medium text-muted-foreground">Select a file</span>
+                        </div>
+                        {availableFiles.length === 0 ? (
+                          <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                            <div>No files uploaded yet</div>
+                            <div className="text-xs mt-1">Upload a file first to see it here</div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="px-3 py-1 text-xs text-muted-foreground">
+                              {availableFiles.length} file{availableFiles.length !== 1 ? 's' : ''} available
+                            </div>
+                            {availableFiles.map((file, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                                onClick={() => handlePlusButtonFileSelect(file.name)}
+                              >
+                                <FileText className="h-4 w-4 text-[#00C2FF]" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium">{file.name}</span>
+                                  <span className="text-xs text-muted-foreground">{file.normalized}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    )}
 
                     <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                       <input
