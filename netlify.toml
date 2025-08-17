@@ -1,0 +1,32 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA redirect for React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/*.mjs"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
