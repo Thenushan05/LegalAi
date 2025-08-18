@@ -189,6 +189,10 @@ export default function Chat() {
   const [atMentionPosition, setAtMentionPosition] = useState(0);
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuth();
+  // Track sidebar collapsed state (default collapsed on mobile)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1024 : false
+  );
 
   // File hash persistence functions
   const saveFileHashToStorage = useCallback((fileHash: string) => {
@@ -630,6 +634,20 @@ export default function Chat() {
   useEffect(() => {
     loadAvailableFiles();
   }, [loadAvailableFiles]);
+
+  // Listen for sidebar collapse/expand to adjust layout margins
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ collapsed: boolean }>;
+      if (ce.detail && typeof ce.detail.collapsed === "boolean") {
+        setSidebarCollapsed(ce.detail.collapsed);
+      }
+    };
+    window.addEventListener("sidebar-toggle", handler as EventListener);
+    return () => {
+      window.removeEventListener("sidebar-toggle", handler as EventListener);
+    };
+  }, []);
 
   // Listen for sidebar-triggered upload requests and open the same dialog
   useEffect(() => {
@@ -1635,9 +1653,18 @@ export default function Chat() {
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen bg-background overflow-x-hidden">
         <AppSidebar />
-        <div className="flex-1 flex flex-col ml-16 lg:ml-64">
+        <div
+          className={cn(
+            "flex-1 flex flex-col",
+            // No left margin on mobile (sidebar overlays)
+            "ml-0",
+            // Desktop margin depends on sidebar collapsed state broadcasted by AppSidebar
+            // We'll manage this with a local state that listens to 'sidebar-toggle'
+            sidebarCollapsed ? "lg:ml-16" : "lg:ml-64"
+          )}
+        >
           <AppHeader
             onUploadClick={handleUploadClick}
             onSettingsClick={() => console.log("Settings clicked")}
@@ -1783,7 +1810,15 @@ export default function Chat() {
               </div>
 
               {/* Fixed Bottom Chat Bar */}
-              <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border/50 p-4 z-10 ml-16 lg:ml-64">
+              <div
+                className={cn(
+                  "fixed bottom-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border/50 p-4 z-10",
+                  // Always start at left-0 for mobile; overlay sidebar on top
+                  "left-0",
+                  // On desktop, shift based on sidebar width
+                  sidebarCollapsed ? "lg:left-16" : "lg:left-64"
+                )}
+              >
                 <div className="w-full space-y-3">
                   {isUploading && (
                     <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/40 border border-border/50 text-sm text-muted-foreground">

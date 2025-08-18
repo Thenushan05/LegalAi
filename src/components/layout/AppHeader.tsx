@@ -1,9 +1,9 @@
-import { Bell, User, Search, Settings, HelpCircle, Plus } from "lucide-react";
+import { Bell, User, Search, Settings, HelpCircle, Plus, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HelpDialog } from "@/components/HelpDialog";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 interface AppHeaderProps {
   onUploadClick?: () => void;
@@ -32,12 +33,44 @@ export function AppHeader({
   const navigate = useNavigate();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const { isAuthenticated } = useAuth();
+  // Track sidebar collapsed state (default collapsed on mobile)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1024 : false
+  );
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ collapsed: boolean }>;
+      if (ce.detail && typeof ce.detail.collapsed === "boolean") {
+        setSidebarCollapsed(ce.detail.collapsed);
+      }
+    };
+    window.addEventListener("sidebar-toggle", handler as EventListener);
+    return () => {
+      window.removeEventListener("sidebar-toggle", handler as EventListener);
+    };
+  }, []);
 
   return (
-    <header className="h-16 border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 fixed top-0 right-0 left-16 lg:left-64 z-50">
+    <header
+      className={cn(
+        "h-16 border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 fixed top-0 right-0 left-0 z-50",
+        sidebarCollapsed ? "lg:left-16" : "lg:left-64"
+      )}
+    >
       <div className="flex items-center justify-between h-full px-6">
         {/* Left side - App name and search */}
         <div className="flex items-center gap-6">
+          {/* Mobile hamburger to open sidebar */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 w-9 p-0 rounded-lg lg:hidden"
+            onClick={() => window.dispatchEvent(new Event("sidebar-open"))}
+            aria-label="Open sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <span className="text-white font-bold text-sm">LA</span>

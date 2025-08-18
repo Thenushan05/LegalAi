@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,8 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { cn } from "@/lib/utils";
 
 export default function Settings() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
+  );
   const [profile, setProfile] = useState({
     name: "John Doe",
     email: "john@example.com",
@@ -64,10 +68,26 @@ export default function Settings() {
     setConfirmPassword("");
   };
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ collapsed: boolean }>;
+      if (ce.detail && typeof ce.detail.collapsed === 'boolean') {
+        setSidebarCollapsed(ce.detail.collapsed);
+      }
+    };
+    window.addEventListener('sidebar-toggle', handler as EventListener);
+    return () => window.removeEventListener('sidebar-toggle', handler as EventListener);
+  }, []);
+
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-x-hidden">
       <AppSidebar />
-      <div className="flex-1 flex flex-col ml-16 lg:ml-64">
+      <div
+        className={cn(
+          "flex-1 flex flex-col ml-0",
+          sidebarCollapsed ? "lg:ml-16" : "lg:ml-64"
+        )}
+      >
         <AppHeader />
         <div className="flex-1 flex relative pt-16">
           <div className="flex-1 flex flex-col">

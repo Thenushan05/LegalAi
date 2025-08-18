@@ -525,12 +525,12 @@ export const ChatBubble = ({
                       <div
                         key={index}
                         className={cn(
-                          "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200",
+                          "flex flex-wrap items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200",
                           getHighlightColor(highlight.category)
                         )}
                         onClick={() => onHighlightClick?.(highlight)}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Icon className="w-4 h-4" />
                           <Badge
                             variant="outline"
@@ -539,13 +539,13 @@ export const ChatBubble = ({
                             {category}
                           </Badge>
                         </div>
-                        <span className="text-sm font-medium flex-1">
+                        <span className="text-sm font-medium flex-1 min-w-0 break-words">
                           {highlight.text}
                         </span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                          className="h-6 w-6 p-0 opacity-60 hover:opacity-100 ml-auto"
                         >
                           <FileText className="w-3 h-3" />
                         </Button>

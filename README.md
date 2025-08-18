@@ -1,73 +1,74 @@
-# Welcome to your Lovable project
+# LegalAssist AI — Frontend
 
-## Project info
+A modern React + Vite frontend for LegalAssist AI. It lets users upload legal documents, chat with an AI to ask questions about those documents, generate summaries, compare files, and manage their account.
 
-**URL**: https://lovable.dev/projects/f7db1d18-716d-4645-ac77-4b96e04899df
+## Features
 
-## How can I edit this code?
+- **Document upload**: PDF, DOC, DOCX, TXT, RTF
+- **Chat-based Q&A** over uploaded files
+- **Summarize, Compare, Simplify, Highlight Evidence** actions
+- **Auth**: Email/password login & registration
+- **Responsive UI** with Tailwind CSS, shadcn/ui, Radix Primitives
+- **Sidebar quick actions** and rich chat experience
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- React 18, TypeScript, Vite
+- Tailwind CSS, shadcn/ui, Radix UI, lucide-react
+- React Router, TanStack Query
+- Form validation with React Hook Form + Zod
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f7db1d18-716d-4645-ac77-4b96e04899df) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+Prerequisites: Node.js 18+
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Build and preview:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run build
+npm run preview
+```
 
-**Use GitHub Codespaces**
+## Configuration
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+API base and endpoints are defined in `src/config/api.ts`.
 
-## What technologies are used for this project?
+- Default production API: `https://legaldoc-ai-production.up.railway.app/api`
+- For local backend, change `API_CONFIG.BASE_URL` (e.g., `http://127.0.0.1:8000/api`).
 
-This project is built with:
+No environment variables are required; update the config file directly as needed.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Key Scripts
 
-## How can I deploy this project?
+- `npm run dev` — start local dev server
+- `npm run build` — create production build
+- `npm run preview` — preview the production build
+- `npm run lint` — run ESLint
 
-Simply open [Lovable](https://lovable.dev/projects/f7db1d18-716d-4645-ac77-4b96e04899df) and click on Share -> Publish.
+## Project Structure (high level)
 
-## Can I connect a custom domain to my Lovable project?
+- `src/pages/Login.tsx` — login page (with password visibility toggle)
+- `src/pages/Register.tsx` — registration page (with password visibility toggle)
+- `src/pages/Chat.tsx` — main chat and document operations UI
+- `src/components/layout/AppSidebar.tsx` — sidebar with quick actions (Upload triggers chat upload dialog)
+- `src/contexts/AuthContext.tsx` — auth state and helpers
+- `src/config/api.ts` — API client and endpoints
 
-Yes, you can!
+## Deployment
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+This project uses Vite and includes a `netlify.toml` for simple Netlify deployment.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Basic flow:
+
+1. `npm run build`
+2. Deploy the `dist/` folder (Netlify, Vercel static, or any static host). Ensure the backend URL in `src/config/api.ts` is reachable from production.
+
+## Notes
+
+- Google sign-in is scaffolded but not implemented in the current UI.
+- Upload limits (size/types) are enforced by the backend; ensure they match your backend configuration.
