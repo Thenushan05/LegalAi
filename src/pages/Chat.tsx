@@ -145,6 +145,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [placeholderText, setPlaceholderText] = useState(placeholderTexts[0]);
   const [isTypingPlaceholder, setIsTypingPlaceholder] = useState(false);
@@ -699,77 +700,81 @@ export default function Chat() {
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
       if (files.length > 0 && uploadType) {
-        // Process each file
-        for (const file of files) {
-          if (backendAvailable) {
-            try {
-              // Upload to backend (use guest upload if not authenticated)
-              const uploadResponse: UploadResponse = isAuthenticated
-                ? await apiClient.uploadFile(file, uploadType)
-                : await apiClient.guestUploadFile(file);
+        setIsUploading(true);
+        try {
+          // Process each file
+          for (const file of files) {
+            if (backendAvailable) {
+              try {
+                // Upload to backend (use guest upload if not authenticated)
+                const uploadResponse: UploadResponse = isAuthenticated
+                  ? await apiClient.uploadFile(file, uploadType)
+                  : await apiClient.guestUploadFile(file);
 
-              // Store upload response
-              setUploadedFiles((prev) => ({
-                ...prev,
-                [uploadResponse.file_id]: uploadResponse,
-              }));
+                // Store upload response
+                setUploadedFiles((prev) => ({
+                  ...prev,
+                  [uploadResponse.file_id]: uploadResponse,
+                }));
 
-              // Set initial status
-              setFileStatuses((prev) => ({
-                ...prev,
-                [uploadResponse.file_id]: "processing",
-              }));
+                // Set initial status
+                setFileStatuses((prev) => ({
+                  ...prev,
+                  [uploadResponse.file_id]: "processing",
+                }));
 
-              // Add to staged files with backend metadata
+                // Add to staged files with backend metadata
+                const fileWithType = file as File & {
+                  uploadType?: "normal" | "confidential";
+                  fileId?: string;
+                };
+                fileWithType.uploadType = uploadType;
+                fileWithType.fileId = uploadResponse.file_id;
+                setStagedFiles((prev) => [...prev, fileWithType]);
+
+                // Start polling for status updates
+                pollFileStatus(uploadResponse.file_id);
+
+                const typeLabel =
+                  uploadType === "confidential" ? "confidential" : "normal";
+                toast({
+                  description: `${file.name} uploaded successfully (${typeLabel})`,
+                  duration: 2000,
+                });
+                // Refresh available files list after successful upload
+                loadAvailableFiles();
+              } catch (error) {
+                console.error("Upload error:", error);
+                toast({
+                  description: `Failed to upload ${file.name}: ${error}`,
+                  variant: "destructive",
+                  duration: 3000,
+                });
+              }
+            } else {
+              // Fallback to demo mode
               const fileWithType = file as File & {
                 uploadType?: "normal" | "confidential";
-                fileId?: string;
               };
               fileWithType.uploadType = uploadType;
-              fileWithType.fileId = uploadResponse.file_id;
               setStagedFiles((prev) => [...prev, fileWithType]);
-
-              // Start polling for status updates
-              pollFileStatus(uploadResponse.file_id);
 
               const typeLabel =
                 uploadType === "confidential" ? "confidential" : "normal";
               toast({
-                description: `${file.name} uploaded successfully (${typeLabel})`,
+                description: `${file.name} added to chat (${typeLabel}) - Demo mode`,
                 duration: 2000,
               });
-              // Refresh available files list after successful upload
-              loadAvailableFiles();
-            } catch (error) {
-              console.error("Upload error:", error);
-              toast({
-                description: `Failed to upload ${file.name}: ${error}`,
-                variant: "destructive",
-                duration: 3000,
-              });
             }
-          } else {
-            // Fallback to demo mode
-            const fileWithType = file as File & {
-              uploadType?: "normal" | "confidential";
-            };
-            fileWithType.uploadType = uploadType;
-            setStagedFiles((prev) => [...prev, fileWithType]);
-
-            const typeLabel =
-              uploadType === "confidential" ? "confidential" : "normal";
-            toast({
-              description: `${file.name} added to chat (${typeLabel}) - Demo mode`,
-              duration: 2000,
-            });
           }
+        } finally {
+          // Reset the input and upload type
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+          setUploadType(null);
+          setIsUploading(false);
         }
-
-        // Reset the input and upload type
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-        setUploadType(null);
       }
     },
     [uploadType, toast, backendAvailable, isAuthenticated, loadAvailableFiles]
@@ -1769,6 +1774,12 @@ export default function Chat() {
               {/* Fixed Bottom Chat Bar */}
               <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border/50 p-4 z-10 ml-16 lg:ml-64">
                 <div className="w-full space-y-3">
+                  {isUploading && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/40 border border-border/50 text-sm text-muted-foreground">
+                      <div className="h-3 w-3 rounded-full border-2 border-[#00C2FF] border-t-transparent animate-spin" />
+                      Uploading file(s)... This may take a moment.
+                    </div>
+                  )}
                   {/* Staged Files Display */}
                   {stagedFiles.length > 0 && (
                     <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg border border-border/50">
@@ -1892,7 +1903,7 @@ export default function Chat() {
                           });
                         }}
                         className="h-8 w-8 p-0 rounded-full hover:bg-[#00C2FF]/10 transition-colors"
-                        disabled={isLoading}
+                        disabled={isLoading || isUploading}
                         title={availableFiles.length === 0 ? 'No files uploaded yet' : `${availableFiles.length} files available`}
                       >
                         <Plus className="h-4 w-4 text-[#00C2FF]" />
@@ -1911,7 +1922,7 @@ export default function Chat() {
                           : placeholderTexts[placeholderIndex]
                       }
                       className="pr-48 h-14 text-base rounded-2xl border-2 border-border/50 transition-all duration-300 focus:ring-2 focus:ring-[#00C2FF] focus:border-[#00C2FF] pl-12"
-                      disabled={isLoading}
+                      disabled={isLoading || isUploading}
                     />
 
                     {/* @ Mention Dropdown */}
@@ -1995,7 +2006,7 @@ export default function Chat() {
                         size="sm"
                         onClick={handleFileUpload}
                         className="h-10 w-10 p-0 hover:bg-[#00C2FF]/10 hover:text-[#00C2FF] rounded-xl transition-all duration-200 hover:scale-105"
-                        disabled={isLoading}
+                        disabled={isLoading || isUploading}
                       >
                         <Upload className="h-5 w-5" />
                       </Button>
@@ -2011,7 +2022,7 @@ export default function Chat() {
                             ? "bg-[#FF4C4C] hover:bg-[#CC3D3D] text-white"
                             : "hover:bg-[#00C2FF]/10 hover:text-[#00C2FF]"
                         )}
-                        disabled={isLoading}
+                        disabled={isLoading || isUploading}
                       >
                         <Mic className="h-5 w-5" />
                       </Button>
@@ -2020,7 +2031,7 @@ export default function Chat() {
                         <div className="relative group">
                           <Button
                             onClick={handleSimplifyMessage}
-                            disabled={!currentFileHash || isLoading}
+                            disabled={!currentFileHash || isLoading || isUploading}
                             size="sm"
                             className={cn(
                               "h-10 w-10 p-0 rounded-xl transition-all duration-300",
@@ -2078,7 +2089,7 @@ export default function Chat() {
                         <div className="relative group">
                           <Button
                             onClick={handleSendMessage}
-                            disabled={!inputValue.trim() || isLoading}
+                            disabled={!inputValue.trim() || isLoading || isUploading}
                             size="sm"
                             className={cn(
                               "h-10 w-10 p-0 rounded-xl transition-all duration-300",
