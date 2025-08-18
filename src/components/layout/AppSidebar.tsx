@@ -183,17 +183,11 @@ export function AppSidebar() {
             <Button
               variant="outline"
               className="w-full border-2 border-dashed border-sidebar-border hover:border-primary rounded-xl h-9 transition-all duration-200 text-sm"
-              onClick={() => document.getElementById("file-upload")?.click()}
+              onClick={() => window.dispatchEvent(new Event('open-upload-dialog'))}
             >
               <Upload className="h-4 w-4 mr-2" />
               {!collapsed && "Upload Document"}
             </Button>
-            <input
-              id="file-upload"
-              type="file"
-              accept=".pdf,.doc,.docx"
-              className="hidden"
-            />
           </div>
 
           {/* Navigation Links */}

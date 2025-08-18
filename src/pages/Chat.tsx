@@ -631,6 +631,17 @@ export default function Chat() {
     loadAvailableFiles();
   }, [loadAvailableFiles]);
 
+  // Listen for sidebar-triggered upload requests and open the same dialog
+  useEffect(() => {
+    const openUploadHandler = () => {
+      setShowUploadDialog(true);
+    };
+    window.addEventListener('open-upload-dialog', openUploadHandler);
+    return () => {
+      window.removeEventListener('open-upload-dialog', openUploadHandler);
+    };
+  }, []);
+
   const typePlaceholderText = async (text: string) => {
     setIsTypingPlaceholder(true);
     setPlaceholderText("");
