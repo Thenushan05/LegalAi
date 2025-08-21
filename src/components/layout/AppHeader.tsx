@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Input } from "@/components/ui/input";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { HelpDialog } from "@/components/HelpDialog";
 import { UserMenu } from "@/components/auth/UserMenu";
@@ -41,7 +41,6 @@ export function AppHeader({
   onNewChatClick,
   showNewChat = false,
 }: AppHeaderProps) {
-  const navigate = useNavigate();
   const location = useLocation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const { isAuthenticated } = useAuth();
@@ -103,9 +102,7 @@ export function AppHeader({
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-3">
-            {sidebarCollapsed && (
-              <h1 className="text-xl font-bold text-primary">DocksTalk</h1>
-            )}
+            <h1 className={cn("text-xl font-bold text-primary", !sidebarCollapsed && "lg:hidden")}>DocksTalk</h1>
 
             {/* Breadcrumbs */}
             <nav className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
