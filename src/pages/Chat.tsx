@@ -184,7 +184,9 @@ export default function Chat() {
   const [selectedEvidence, setSelectedEvidence] = useState<Evidence[]>([]);
   const [showFileSelector, setShowFileSelector] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [availableFiles, setAvailableFiles] = useState<Array<{name: string, normalized: string}>>([]);
+  const [availableFiles, setAvailableFiles] = useState<
+    Array<{ name: string; normalized: string }>
+  >([]);
   const [showAtMention, setShowAtMention] = useState(false);
   const [atMentionPosition, setAtMentionPosition] = useState(0);
   const { toast } = useToast();
@@ -207,16 +209,16 @@ export default function Chat() {
   const loadAvailableFiles = useCallback(() => {
     try {
       const files = apiClient.getAvailableFiles();
-      console.log('Loaded files from session storage:', files);
+      console.log("Loaded files from session storage:", files);
       setAvailableFiles(files);
-      
+
       // Also log what's in session storage directly
-      const fileMap = sessionStorage.getItem('fileMap');
-      const fileList = sessionStorage.getItem('fileList');
-      console.log('Session storage fileMap:', fileMap);
-      console.log('Session storage fileList:', fileList);
+      const fileMap = sessionStorage.getItem("fileMap");
+      const fileList = sessionStorage.getItem("fileList");
+      console.log("Session storage fileMap:", fileMap);
+      console.log("Session storage fileList:", fileList);
     } catch (error) {
-      console.error('Error loading available files:', error);
+      console.error("Error loading available files:", error);
       setAvailableFiles([]);
     }
   }, []);
@@ -225,25 +227,34 @@ export default function Chat() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const cursorPosition = e.target.selectionStart || 0;
-    
+
     setInputValue(value);
-    
+
     // Check for @ mention
-    const atIndex = value.lastIndexOf('@', cursorPosition - 1);
-    if (!isLoading && atIndex !== -1 && (atIndex === 0 || value[atIndex - 1] === ' ')) {
-      const searchTerm = value.substring(atIndex + 1, cursorPosition).toLowerCase();
-      console.log('@ mention detected, search term:', searchTerm);
-      console.log('Available files for filtering:', availableFiles);
+    const atIndex = value.lastIndexOf("@", cursorPosition - 1);
+    if (
+      !isLoading &&
+      atIndex !== -1 &&
+      (atIndex === 0 || value[atIndex - 1] === " ")
+    ) {
+      const searchTerm = value
+        .substring(atIndex + 1, cursorPosition)
+        .toLowerCase();
+      console.log("@ mention detected, search term:", searchTerm);
+      console.log("Available files for filtering:", availableFiles);
       // Refresh available files to ensure latest
       loadAvailableFiles();
-      
-      const filteredFiles = availableFiles.filter(file => 
-        file.normalized.includes(searchTerm) || file.name.toLowerCase().includes(searchTerm)
+
+      const filteredFiles = availableFiles.filter(
+        (file) =>
+          file.normalized.includes(searchTerm) ||
+          file.name.toLowerCase().includes(searchTerm)
       );
-      
-      console.log('Filtered files:', filteredFiles);
-      
-      if (availableFiles.length > 0) { // Show dropdown if any files exist
+
+      console.log("Filtered files:", filteredFiles);
+
+      if (availableFiles.length > 0) {
+        // Show dropdown if any files exist
         setShowAtMention(true);
         setAtMentionPosition(atIndex);
       } else {
@@ -257,9 +268,13 @@ export default function Chat() {
   // Handle file selection from @ mention
   const handleFileSelect = (fileName: string) => {
     const beforeAt = inputValue.substring(0, atMentionPosition);
-    const afterCursor = inputValue.substring(inputValue.indexOf(' ', atMentionPosition) !== -1 ? inputValue.indexOf(' ', atMentionPosition) : inputValue.length);
+    const afterCursor = inputValue.substring(
+      inputValue.indexOf(" ", atMentionPosition) !== -1
+        ? inputValue.indexOf(" ", atMentionPosition)
+        : inputValue.length
+    );
     const newValue = `${beforeAt}@${fileName}${afterCursor}`;
-    
+
     setInputValue(newValue);
     setShowAtMention(false);
     setSelectedFile(fileName);
@@ -267,12 +282,12 @@ export default function Chat() {
 
   // Handle + button file selection
   const handlePlusButtonFileSelect = (fileName: string) => {
-    console.log('Plus button file selected:', fileName);
+    console.log("Plus button file selected:", fileName);
     setSelectedFile(fileName);
     setShowFileSelector(false);
     // Add file mention to input if not already present
     if (!inputValue.includes(fileName)) {
-      setInputValue(prev => prev ? `${prev} @${fileName}` : `@${fileName}`);
+      setInputValue((prev) => (prev ? `${prev} @${fileName}` : `@${fileName}`));
     }
     // Also trigger a refresh of available files
     setTimeout(() => loadAvailableFiles(), 100);
@@ -359,7 +374,7 @@ export default function Chat() {
             isSimplified: msg.is_simplified || false,
           })
         );
-        
+
         // Only update if server has more recent data or local storage is empty
         if (storedMessages.length === 0) {
           setMessages(formattedMessages.slice(-20));
@@ -537,10 +552,10 @@ export default function Chat() {
       prevIsAuthenticatedRef.current = isAuthenticated;
       return;
     }
-    
+
     // If user was authenticated and now is not (logged out)
     if (prevIsAuthenticatedRef.current && !isAuthenticated) {
-      console.log('User logged out, clearing chat storage');
+      console.log("User logged out, clearing chat storage");
       clearChatStorage();
       setMessages([]);
       setCurrentFileHash(null);
@@ -548,7 +563,7 @@ export default function Chat() {
       setUploadedFiles({});
       setFileStatuses({});
     }
-    
+
     prevIsAuthenticatedRef.current = isAuthenticated;
   }, [isAuthenticated, clearChatStorage]);
 
@@ -556,7 +571,7 @@ export default function Chat() {
   useEffect(() => {
     if (!isAuthenticated && prevIsAuthenticatedRef.current === true) {
       // Only clear when transitioning from authenticated to unauthenticated (logout)
-      console.log('User logged out, clearing authenticated data');
+      console.log("User logged out, clearing authenticated data");
       clearChatStorage();
       setMessages([]);
       setCurrentFileHash(null);
@@ -565,7 +580,7 @@ export default function Chat() {
       setFileStatuses({});
     } else if (isAuthenticated && prevIsAuthenticatedRef.current === false) {
       // User just logged in, load their data
-      console.log('User logged in, loading chat history');
+      console.log("User logged in, loading chat history");
       setTimeout(() => loadChatHistory(), 100);
     }
   }, [isAuthenticated, clearChatStorage, loadChatHistory]);
@@ -595,9 +610,9 @@ export default function Chat() {
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [currentFileHash, saveFileHashToStorage]);
 
@@ -654,9 +669,9 @@ export default function Chat() {
     const openUploadHandler = () => {
       setShowUploadDialog(true);
     };
-    window.addEventListener('open-upload-dialog', openUploadHandler);
+    window.addEventListener("open-upload-dialog", openUploadHandler);
     return () => {
-      window.removeEventListener('open-upload-dialog', openUploadHandler);
+      window.removeEventListener("open-upload-dialog", openUploadHandler);
     };
   }, []);
 
@@ -761,6 +776,10 @@ export default function Chat() {
                 fileWithType.fileId = uploadResponse.file_id;
                 setStagedFiles((prev) => [...prev, fileWithType]);
 
+                // Set current file hash so actions (like Simplify) are enabled immediately
+                setCurrentFileHash(uploadResponse.file_id);
+                saveFileHashToStorage(uploadResponse.file_id);
+
                 // Start polling for status updates
                 pollFileStatus(uploadResponse.file_id);
 
@@ -806,7 +825,14 @@ export default function Chat() {
         }
       }
     },
-    [uploadType, toast, backendAvailable, isAuthenticated, loadAvailableFiles]
+    [
+      uploadType,
+      toast,
+      backendAvailable,
+      isAuthenticated,
+      loadAvailableFiles,
+      saveFileHashToStorage,
+    ]
   );
 
   // Listen for file uploads from sidebar
@@ -912,9 +938,9 @@ export default function Chat() {
         setShowAtMention(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -957,24 +983,33 @@ export default function Chat() {
     // Clean the question by removing any @mention file tokens (both original and normalized names)
     const cleanQuestion = (text: string) => {
       try {
-        const fileList: Array<{ name: string; normalized: string }> = JSON.parse(
-          sessionStorage.getItem('fileList') || '[]'
-        );
+        const fileList: Array<{ name: string; normalized: string }> =
+          JSON.parse(sessionStorage.getItem("fileList") || "[]");
         let cleaned = text;
-        const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapeRegex = (s: string) =>
+          s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         for (const f of fileList) {
           const patterns = [f.name, f.normalized]
             .filter(Boolean)
-            .map((n) => new RegExp(`(^|\\s)@${escapeRegex(n)}(\\b|\\s|$)`, 'ig'));
+            .map(
+              (n) => new RegExp(`(^|\\s)@${escapeRegex(n)}(\\b|\\s|$)`, "ig")
+            );
           for (const re of patterns) {
-            cleaned = cleaned.replace(re, (m, p1, p2) => (p1 ? p1 : '') + (p2 ? p2 : ''));
+            cleaned = cleaned.replace(
+              re,
+              (m, p1, p2) => (p1 ? p1 : "") + (p2 ? p2 : "")
+            );
           }
         }
         // Also remove stray solitary '@' tokens followed by non-space word if it exactly matches any file token
         // Build a set of tokens for quick check
-        const tokens = new Set<string>(fileList.flatMap(f => [f.name, f.normalized].filter(Boolean)) as string[]);
+        const tokens = new Set<string>(
+          fileList.flatMap((f) =>
+            [f.name, f.normalized].filter(Boolean)
+          ) as string[]
+        );
         cleaned = cleaned.replace(/(^|\s)@([^\s]+)/g, (full, pre, word) => {
-          return tokens.has(word) ? (pre || '') : full;
+          return tokens.has(word) ? pre || "" : full;
         });
         return cleaned.trim();
       } catch {
@@ -1015,7 +1050,7 @@ export default function Chat() {
         }
       } else if (selectedFile) {
         // Use selected file from @ mention or + button
-        const fileMap = JSON.parse(sessionStorage.getItem('fileMap') || '{}');
+        const fileMap = JSON.parse(sessionStorage.getItem("fileMap") || "{}");
         fileId = fileMap[selectedFile];
         if (fileId) {
           setCurrentFileHash(fileId);
@@ -1452,7 +1487,7 @@ export default function Chat() {
           </head>
           <body>
             <div class="header">
-              <h1>LegalAssist AI Response</h1>
+              <h1>DocksTalk Response</h1>
               <div class="meta">
                 Generated on: ${currentDate} at ${currentTime}
               </div>
@@ -1461,7 +1496,7 @@ export default function Chat() {
               .replace(/</g, "&lt;")
               .replace(/>/g, "&gt;")}</div>
             <div class="footer">
-              This document was generated by LegalAssist AI. Please consult with a qualified legal professional for important legal matters.
+              This document was generated by DocksTalk. Please consult with a qualified legal professional for important legal matters.
             </div>
           </body>
         </html>
@@ -1632,10 +1667,10 @@ export default function Chat() {
     setEditingContent("");
     setEditingFiles([]);
     setIsEditingMessage(false);
-    
+
     // Clear storage
     clearChatStorage();
-    
+
     toast({
       description: "New chat started",
       duration: 2000,
@@ -1685,7 +1720,7 @@ export default function Chat() {
                           className="text-3xl font-bold mb-3"
                           style={{ color: "#111111" }}
                         >
-                          Welcome to LegalAssist AI
+                          Welcome to DocksTalk
                         </h2>
                         <p className="text-muted-foreground max-w-lg mx-auto text-center text-lg">
                           {isAuthenticated
@@ -1950,7 +1985,11 @@ export default function Chat() {
                         }}
                         className="h-8 w-8 p-0 rounded-full hover:bg-[#00C2FF]/10 transition-colors"
                         disabled={isLoading || isUploading}
-                        title={availableFiles.length === 0 ? 'No files uploaded yet' : `${availableFiles.length} files available`}
+                        title={
+                          availableFiles.length === 0
+                            ? "No files uploaded yet"
+                            : `${availableFiles.length} files available`
+                        }
                       >
                         <Plus className="h-4 w-4 text-[#00C2FF]" />
                       </Button>
@@ -1975,7 +2014,9 @@ export default function Chat() {
                     {showAtMention && (
                       <div className="absolute bottom-16 left-12 w-80 bg-white dark:bg-gray-800 border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto z-50">
                         <div className="px-3 py-2 border-b border-border">
-                          <span className="text-sm font-medium text-muted-foreground">@ Mention Files</span>
+                          <span className="text-sm font-medium text-muted-foreground">
+                            @ Mention Files
+                          </span>
                         </div>
                         {availableFiles.length === 0 ? (
                           <div className="px-3 py-4 text-center text-sm text-muted-foreground">
@@ -1983,9 +2024,15 @@ export default function Chat() {
                           </div>
                         ) : (
                           availableFiles
-                            .filter(file => {
-                              const searchTerm = inputValue.substring(atMentionPosition + 1).toLowerCase();
-                              return searchTerm === '' || file.normalized.includes(searchTerm) || file.name.toLowerCase().includes(searchTerm);
+                            .filter((file) => {
+                              const searchTerm = inputValue
+                                .substring(atMentionPosition + 1)
+                                .toLowerCase();
+                              return (
+                                searchTerm === "" ||
+                                file.normalized.includes(searchTerm) ||
+                                file.name.toLowerCase().includes(searchTerm)
+                              );
                             })
                             .map((file, index) => (
                               <div
@@ -1995,8 +2042,12 @@ export default function Chat() {
                               >
                                 <FileText className="h-4 w-4 text-[#00C2FF]" />
                                 <div className="flex flex-col">
-                                  <span className="text-sm font-medium">{file.name}</span>
-                                  <span className="text-xs text-muted-foreground">{file.normalized}</span>
+                                  <span className="text-sm font-medium">
+                                    {file.name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {file.normalized}
+                                  </span>
                                 </div>
                               </div>
                             ))
@@ -2008,28 +2059,39 @@ export default function Chat() {
                     {showFileSelector && (
                       <div className="absolute bottom-16 left-0 bg-white dark:bg-gray-800 border border-border rounded-lg shadow-lg w-72 max-h-40 overflow-y-auto z-50">
                         <div className="px-3 py-2 border-b border-border">
-                          <span className="text-sm font-medium text-muted-foreground">Select a file</span>
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Select a file
+                          </span>
                         </div>
                         {availableFiles.length === 0 ? (
                           <div className="px-3 py-4 text-center text-sm text-muted-foreground">
                             <div>No files uploaded yet</div>
-                            <div className="text-xs mt-1">Upload a file first to see it here</div>
+                            <div className="text-xs mt-1">
+                              Upload a file first to see it here
+                            </div>
                           </div>
                         ) : (
                           <>
                             <div className="px-3 py-1 text-xs text-muted-foreground">
-                              {availableFiles.length} file{availableFiles.length !== 1 ? 's' : ''} available
+                              {availableFiles.length} file
+                              {availableFiles.length !== 1 ? "s" : ""} available
                             </div>
                             {availableFiles.map((file, index) => (
                               <div
                                 key={index}
                                 className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                onClick={() => handlePlusButtonFileSelect(file.name)}
+                                onClick={() =>
+                                  handlePlusButtonFileSelect(file.name)
+                                }
                               >
                                 <FileText className="h-4 w-4 text-[#00C2FF]" />
                                 <div className="flex flex-col">
-                                  <span className="text-sm font-medium">{file.name}</span>
-                                  <span className="text-xs text-muted-foreground">{file.normalized}</span>
+                                  <span className="text-sm font-medium">
+                                    {file.name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {file.normalized}
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -2077,7 +2139,9 @@ export default function Chat() {
                         <div className="relative group">
                           <Button
                             onClick={handleSimplifyMessage}
-                            disabled={!currentFileHash || isLoading || isUploading}
+                            disabled={
+                              !currentFileHash || isLoading || isUploading
+                            }
                             size="sm"
                             className={cn(
                               "h-10 w-10 p-0 rounded-xl transition-all duration-300",
@@ -2135,7 +2199,9 @@ export default function Chat() {
                         <div className="relative group">
                           <Button
                             onClick={handleSendMessage}
-                            disabled={!inputValue.trim() || isLoading || isUploading}
+                            disabled={
+                              !inputValue.trim() || isLoading || isUploading
+                            }
                             size="sm"
                             className={cn(
                               "h-10 w-10 p-0 rounded-xl transition-all duration-300",
@@ -2207,8 +2273,8 @@ export default function Chat() {
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground mt-3 text-center">
-                    LegalAssist AI can make mistakes. Consider consulting a
-                    lawyer for important legal matters.
+                    DocksTalk can make mistakes. Consider consulting a lawyer
+                    for important legal matters.
                   </p>
                 </div>
               </div>

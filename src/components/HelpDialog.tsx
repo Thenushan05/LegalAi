@@ -1,18 +1,18 @@
-import * as React from "react"
-import { X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 type HelpDialogProps = {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
 
 export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
   return (
@@ -20,7 +20,9 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold">Help & Support</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">
+              Help & Support
+            </DialogTitle>
             <Button
               variant="ghost"
               size="icon"
@@ -32,48 +34,57 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
             </Button>
           </div>
           <DialogDescription className="text-left">
-            Get help with using LegalAssist AI
+            Get help with using DocksTalk
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6 py-4">
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">Getting Started</h3>
             <div className="space-y-3">
               <div className="p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-medium text-foreground">Uploading Documents</h4>
+                <h4 className="font-medium text-foreground">
+                  Uploading Documents
+                </h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Click the upload button in the chat interface to add documents for analysis. 
-                  Supported formats include PDF, DOCX, and TXT files.
+                  Click the upload button in the chat interface to add documents
+                  for analysis. Supported formats include PDF, DOCX, and TXT
+                  files.
                 </p>
               </div>
-              
+
               <div className="p-4 bg-muted/50 rounded-lg">
                 <h4 className="font-medium text-foreground">Analyzing Text</h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Highlight any text in your document to see AI-powered suggestions 
-                  and legal insights.
+                  Highlight any text in your document to see AI-powered
+                  suggestions and legal insights.
                 </p>
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Frequently Asked Questions</h3>
+            <h3 className="font-semibold text-lg">
+              Frequently Asked Questions
+            </h3>
             <div className="space-y-3">
               <div className="p-4 border rounded-lg">
-                <h4 className="font-medium text-foreground">How do I save my work?</h4>
+                <h4 className="font-medium text-foreground">
+                  How do I save my work?
+                </h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Your work is automatically saved as you go. You can access your documents 
-                  anytime from the main dashboard.
+                  Your work is automatically saved as you go. You can access
+                  your documents anytime from the main dashboard.
                 </p>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
-                <h4 className="font-medium text-foreground">Is my data secure?</h4>
+                <h4 className="font-medium text-foreground">
+                  Is my data secure?
+                </h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Yes, we use end-to-end encryption to ensure your documents and data 
-                  remain private and secure.
+                  Yes, we use end-to-end encryption to ensure your documents and
+                  data remain private and secure.
                 </p>
               </div>
             </div>
@@ -87,5 +98,5 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

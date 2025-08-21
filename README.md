@@ -1,6 +1,6 @@
-# LegalAssist AI — Frontend
+# DocksTalk — Frontend
 
-A modern React + Vite frontend for LegalAssist AI. It lets users upload legal documents, chat with an AI to ask questions about those documents, generate summaries, compare files, and manage their account.
+A modern React + Vite frontend for DocksTalk. It lets users upload legal documents, chat with an AI to ask questions about those documents, generate summaries, compare files, and manage their account.
 
 ## Features
 

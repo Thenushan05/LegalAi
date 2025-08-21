@@ -1,32 +1,41 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
-import { Eye, EyeOff, Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import { Eye, EyeOff, Mail, Lock, User, LogIn, UserPlus } from "lucide-react";
 
 interface LoginDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) => {
+export const LoginDialog: React.FC<LoginDialogProps> = ({
+  open,
+  onOpenChange,
+}) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('login');
-  
+  const [activeTab, setActiveTab] = useState("login");
+
   // Login form state
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
   // Register form state
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [registerDisplayName, setRegisterDisplayName] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerDisplayName, setRegisterDisplayName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const { login, register } = useAuth();
   const { toast } = useToast();
@@ -44,8 +53,8 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
       });
       onOpenChange(false);
       // Reset form
-      setLoginEmail('');
-      setLoginPassword('');
+      setLoginEmail("");
+      setLoginPassword("");
     } catch (error) {
       toast({
         description: `Login failed: ${error}`,
@@ -60,7 +69,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!registerEmail || !registerPassword || !registerDisplayName) return;
-    
+
     if (registerPassword !== confirmPassword) {
       toast({
         description: "Passwords do not match",
@@ -88,10 +97,10 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
       });
       onOpenChange(false);
       // Reset form
-      setRegisterEmail('');
-      setRegisterPassword('');
-      setRegisterDisplayName('');
-      setConfirmPassword('');
+      setRegisterEmail("");
+      setRegisterPassword("");
+      setRegisterDisplayName("");
+      setConfirmPassword("");
     } catch (error) {
       toast({
         description: `Registration failed: ${error}`,
@@ -109,7 +118,7 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LogIn className="h-5 w-5 text-[#00C2FF]" />
-            Welcome to LegalAssist AI
+            Welcome to DocksTalk
           </DialogTitle>
           <DialogDescription>
             Sign in to your account or create a new one to get started.
@@ -262,7 +271,13 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onOpenChange }) 
               <Button
                 type="submit"
                 className="w-full bg-[#00C2FF] hover:bg-[#0099CC] text-white"
-                disabled={loading || !registerEmail || !registerPassword || !registerDisplayName || !confirmPassword}
+                disabled={
+                  loading ||
+                  !registerEmail ||
+                  !registerPassword ||
+                  !registerDisplayName ||
+                  !confirmPassword
+                }
               >
                 {loading ? "Creating account..." : "Create Account"}
               </Button>

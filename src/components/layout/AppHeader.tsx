@@ -1,4 +1,12 @@
-import { Bell, User, Search, Settings, HelpCircle, Plus, Menu } from "lucide-react";
+import {
+  Bell,
+  User,
+  Search,
+  Settings,
+  HelpCircle,
+  Plus,
+  Menu,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Input } from "@/components/ui/input";
@@ -24,11 +32,11 @@ interface AppHeaderProps {
   showNewChat?: boolean;
 }
 
-export function AppHeader({ 
-  onUploadClick, 
-  onSettingsClick, 
-  onNewChatClick, 
-  showNewChat = false 
+export function AppHeader({
+  onUploadClick,
+  onSettingsClick,
+  onNewChatClick,
+  showNewChat = false,
 }: AppHeaderProps) {
   const navigate = useNavigate();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -75,11 +83,9 @@ export function AppHeader({
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <span className="text-white font-bold text-sm">LA</span>
             </div>
-            <h1 className="text-xl font-bold text-primary">
-              LegalAssist AI
-            </h1>
+            <h1 className="text-xl font-bold text-primary">DocksTalk</h1>
           </div>
-          
+
           {/* Search Bar */}
           <div className="relative hidden md:block">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -114,12 +120,12 @@ export function AppHeader({
           >
             <HelpCircle className="h-4 w-4" />
           </Button>
-          
+
           {/* Help Dialog */}
           <HelpDialog open={isHelpOpen} onOpenChange={setIsHelpOpen} />
-          
+
           <ThemeToggle />
-          
+
           {/* Notifications */}
           <Button
             variant="ghost"
