@@ -84,13 +84,13 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "h-16 border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 fixed top-0 right-0 left-0 z-[70]",
+        "h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 fixed top-0 right-0 left-0 z-[70]",
         sidebarCollapsed ? "lg:left-16" : "lg:left-64"
       )}
     >
-      <div className="flex items-center justify-between h-full px-6">
+      <div className="flex items-center justify-between h-full px-3 sm:px-4 md:px-6">
         {/* Left side - App name and search */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 md:gap-6">
           {/* Mobile hamburger to open sidebar */}
           <Button
             variant="ghost"
@@ -102,7 +102,7 @@ export function AppHeader({
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-3">
-            <h1 className={cn("text-xl font-bold text-primary", !sidebarCollapsed && "lg:hidden")}>DocksTalk</h1>
+            <h1 className={cn("hidden sm:block text-xl font-bold text-primary", !sidebarCollapsed && "lg:hidden")}>DocksTalk</h1>
 
             {/* Breadcrumbs */}
             <nav className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
@@ -126,7 +126,7 @@ export function AppHeader({
         </div>
 
         {/* Right side - Controls */}
-        <div className="flex items-center gap-3 flex-nowrap">
+        <div className="flex items-center gap-2 md:gap-3 flex-nowrap">
           {/* New Chat Button - only show when there are messages */}
           {showNewChat && (
             <Button
@@ -159,7 +159,7 @@ export function AppHeader({
           <Button
             variant="ghost"
             size="sm"
-            className="relative h-9 w-9 p-0 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200"
+            className="hidden sm:inline-flex relative h-9 w-9 p-0 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200"
           >
             <Bell className="h-4 w-4" />
             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
@@ -170,7 +170,7 @@ export function AppHeader({
             variant="ghost"
             size="sm"
             onClick={onSettingsClick}
-            className="h-9 w-9 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 hover:scale-105"
+            className="hidden sm:inline-flex h-9 w-9 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 hover:scale-105"
           >
             <Settings className="h-4 w-4" />
           </Button>
