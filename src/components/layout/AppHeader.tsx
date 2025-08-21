@@ -126,14 +126,14 @@ export function AppHeader({
         </div>
 
         {/* Right side - Controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-nowrap">
           {/* New Chat Button - only show when there are messages */}
           {showNewChat && (
             <Button
               variant="outline"
               size="sm"
               onClick={onNewChatClick}
-              className="h-9 px-3 rounded-lg border-2 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary transition-all duration-200 hover:scale-105"
+              className="hidden md:inline-flex h-9 px-3 rounded-lg border-2 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary transition-all duration-200 hover:scale-105"
             >
               <Plus className="h-4 w-4 mr-2" />
               New Chat

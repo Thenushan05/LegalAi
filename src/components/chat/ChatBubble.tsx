@@ -525,7 +525,7 @@ export const ChatBubble = ({
                       <div
                         key={index}
                         className={cn(
-                          "flex flex-wrap items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200",
+                          "flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200",
                           getHighlightColor(highlight.category)
                         )}
                         onClick={() => onHighlightClick?.(highlight)}
@@ -545,7 +545,7 @@ export const ChatBubble = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 opacity-60 hover:opacity-100 ml-auto"
+                          className="h-6 w-6 p-0 opacity-60 hover:opacity-100 sm:ml-auto mt-1 sm:mt-0"
                         >
                           <FileText className="w-3 h-3" />
                         </Button>
