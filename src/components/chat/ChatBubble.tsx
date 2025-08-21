@@ -13,7 +13,7 @@ import {
   Send,
   Edit,
   X,
-  Info,
+  Paperclip,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -491,7 +491,7 @@ export const ChatBubble = ({
                   onClick={onShowEvidence}
                   className="h-8 w-8 p-0 rounded-lg transition-all duration-200 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-border/50"
                 >
-                  <Info className="h-4 w-4" />
+                  <Paperclip className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>

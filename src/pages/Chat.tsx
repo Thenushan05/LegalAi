@@ -5,7 +5,6 @@ import {
   Mic,
   Settings,
   Plus,
-  Brain,
   Upload,
   X,
   FileText,
@@ -1712,8 +1711,12 @@ export default function Chat() {
                 {messages.length === 0 && (
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-center space-y-8">
-                      <div className="w-28 h-28 mx-auto rounded-3xl bg-[#00C2FF] flex items-center justify-center shadow-2xl">
-                        <Brain className="w-14 h-14 text-white" />
+                      <div className="w-28 h-28 mx-auto rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden">
+                        <img
+                          src="/dock.png"
+                          alt="DocksTalk logo"
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                       <div>
                         <h2
@@ -1830,7 +1833,11 @@ export default function Chat() {
                             {typingMessage}
                             <span className="inline-flex items-center ml-3">
                               <div className="relative w-5 h-5">
-                                <Brain className="w-5 h-5 text-[#00C2FF] animate-brain-typing" />
+                                <img
+                                  src="/dock.png"
+                                  alt="typing"
+                                  className="w-5 h-5 object-contain animate-pulse"
+                                />
                                 <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#00C2FF] rounded-full animate-pulse"></div>
                               </div>
                             </span>

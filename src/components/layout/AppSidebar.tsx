@@ -21,6 +21,7 @@ import {
   Lightbulb,
   ChevronRight,
   X,
+  MessageSquareText,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -208,11 +209,15 @@ export function AppSidebar() {
             )}
           >
             {!collapsed && (
-              <NavLink to="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">LA</span>
+              <NavLink to="/" className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl overflow-hidden flex items-center justify-center bg-sidebar ring-1 ring-sidebar-border shadow-md">
+                  <img
+                    src={"/dock.png"}
+                    alt="DocksTalk logo"
+                    className="w-full h-full object-contain drop-shadow-sm"
+                  />
                 </div>
-                <span className="font-semibold text-sidebar-foreground">LegalAssist</span>
+                <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-primary leading-tight select-none">DocksTalk</span>
               </NavLink>
             )}
             <Button
