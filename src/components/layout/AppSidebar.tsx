@@ -195,7 +195,7 @@ export function AppSidebar() {
       )}
       <div
         className={cn(
-          "fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border transition-all duration-300 z-[60] lg:z-40 overflow-hidden",
+          "fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border transition-all duration-300 z-[80] lg:z-40 overflow-hidden",
           collapsed ? "w-0 lg:w-16 pointer-events-none lg:pointer-events-auto" : "w-64"
         )}
         aria-hidden={collapsed ? true : false}

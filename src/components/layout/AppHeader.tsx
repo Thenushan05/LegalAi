@@ -84,7 +84,7 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "h-16 border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 fixed top-0 right-0 left-0 z-50",
+        "h-16 border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 fixed top-0 right-0 left-0 z-[70]",
         sidebarCollapsed ? "lg:left-16" : "lg:left-64"
       )}
     >
