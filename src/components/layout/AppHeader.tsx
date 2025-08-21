@@ -6,12 +6,15 @@ import {
   HelpCircle,
   Plus,
   Menu,
+  MessageSquare,
+  Clock,
+  Bookmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { HelpDialog } from "@/components/HelpDialog";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,12 +42,32 @@ export function AppHeader({
   showNewChat = false,
 }: AppHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   // Track sidebar collapsed state (default collapsed on mobile)
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() =>
     typeof window !== "undefined" ? window.innerWidth < 1024 : false
   );
+
+  // Breadcrumb metadata based on pathname
+  const breadcrumb = useMemo(() => {
+    const path = location.pathname;
+    // Map top-level routes to labels and icons
+    const map: Record<string, { label: string; icon: React.ReactNode }> = {
+      "/chat": { label: "Chat", icon: <MessageSquare className="h-4 w-4" /> },
+      "/history": { label: "History", icon: <Clock className="h-4 w-4" /> },
+      "/bookmarks": { label: "Bookmarks", icon: <Bookmark className="h-4 w-4" /> },
+      "/settings": { label: "Settings", icon: <Settings className="h-4 w-4" /> },
+      "/login": { label: "Login", icon: <User className="h-4 w-4" /> },
+      "/register": { label: "Sign Up", icon: <User className="h-4 w-4" /> },
+      "/signup": { label: "Sign Up", icon: <User className="h-4 w-4" /> },
+      "/forgot-password": { label: "Forgot Password", icon: <User className="h-4 w-4" /> },
+    };
+
+    const current = map[path] ?? { label: path.replace("/", ""), icon: null };
+    return { current };
+  }, [location.pathname]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -80,10 +103,19 @@ export function AppHeader({
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">LA</span>
-            </div>
-            <h1 className="text-xl font-bold text-primary">DocksTalk</h1>
+            {sidebarCollapsed && (
+              <h1 className="text-xl font-bold text-primary">DocksTalk</h1>
+            )}
+
+            {/* Breadcrumbs */}
+            <nav className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Dashboard</span>
+              <span className="text-muted-foreground/70">/</span>
+              <div className="flex items-center gap-2">
+                {breadcrumb.current.icon}
+                <span className="capitalize">{breadcrumb.current.label || ""}</span>
+              </div>
+            </nav>
           </div>
 
           {/* Search Bar */}
